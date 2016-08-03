@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta content='text/html; charset=UTF-8' http-equiv='Content-Type' />
+  </head>
+  <body>
+    <p>
+      Some bangumis update.<br>
+    </p>
+    <% @bangumis.each do |bangumi| %>
+      <p>
+        <%= bangumi.title %>
+        <br>
+        <%= bangumi.magnet_link %>
+      </p>
+    <% end %>
+  </body>
+</html>
