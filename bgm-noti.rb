@@ -82,4 +82,6 @@ class GetBangumis
   end
 end
 
-GetBangumis.start
+if __FILE__ == $0
+  GetBangumis.start
+end
