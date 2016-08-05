@@ -1,0 +1,14 @@
+delivery_method:
+  address:              your.smtp.server
+  port:                 587
+  domain:               your.domain
+  user_name:            you@domain.address
+  password:             yourpassword
+  authentication:       plain
+  enable_starttls_auto: true
+
+mail:
+  from:     you@domain.address
+  to:       [someone@server.address]
+  subject:  '"[#{Time.now.strftime(''%Y%m%d'')}] #{@bangumis.count} bangumis updated."'
+  

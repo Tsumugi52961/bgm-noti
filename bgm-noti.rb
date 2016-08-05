@@ -21,13 +21,14 @@ class GetBangumis
   MAGNET_LINK_AND_SIZE = %q{<td nowrap="nowrap" align="center"><a class="download-arrow arrow-magnet" [^h]+href="(.*)">&nbsp;</a></td>\s+<td nowrap="nowrap" align="center">(\S+)<\/td>}
 
   def self.start
+    puts "---------------> Start getting bangumis updates."
     begin
       body = open(DMHY_URL).read
     rescue
-      puts "---------------> Bad Network." and return
+      puts "---------------> Bad Network."
+      return
     end
 
-    puts "---------------> Start getting bangumis updates."
     bangumi_list = body.scan(Regexp.new(TIME + CLASSFICATION + TITLE_WITH_TAG + MAGNET_LINK_AND_SIZE))
 
     new_bangumis = []
@@ -42,7 +43,7 @@ class GetBangumis
 
       new_bangumis << new_bangumi
     end
-    puts "---------------> Success fetching #{new_bangumis.count}bangumis."
+    puts "---------------> Success fetching #{new_bangumis.count} bangumis."
 
     @bangumis = []
     subscriptions = JSON.parse(File.read("subscriptions.json"))
@@ -52,16 +53,11 @@ class GetBangumis
         @bangumis << bangumi if cur_exp.match(bangumi.title)
       end
     end
-    puts "---------------> Complete filt bangumis. #{@bangumis.count} new bangumis"
+    puts "---------------> Complete filtering. #{@bangumis.count} updates."
 
+    mail_config = YAML.load_file("mail_config.yml")
     Mail.defaults do
-      delivery_method :smtp, { :address              => "your.smtp.server",
-                               :port                 => 587,
-                               :domain               => 'your.domain',
-                               :user_name            => 'you@your.domain',
-                               :password             => 'yourpassword',
-                               :authentication       => 'plain',
-                               :enable_starttls_auto => true  }
+      delivery_method :smtp, mail_config["delivery_method"].map{|k, v| {k.to_sym => v}}.reduce(:merge)
     end
 
     context = binding
@@ -76,9 +72,9 @@ class GetBangumis
       end
     end
 
-    mail.from     = 'you@your.domain'
-    mail.to       = 'you@your.domain'
-    mail.subject  = "#{@bangumis.count} bangumis updated #{Time.now.strftime("%Y%m%d")}"
+    mail.from     = mail_config["mail"]["from"]
+    mail.to       = mail_config["mail"]["to"]
+    mail.subject  = eval(mail_config["mail"]["subject"])
 
     mail.deliver!
     puts "---------------> Succeed sending email."
