@@ -3,8 +3,6 @@ require './bgm-noti.rb'
 
 scheduler = Rufus::Scheduler.singleton
 
-scheduler.every("30m") do
-  GetBangumis.start
-end
+scheduler.every "30m", GetBangumis
 
 scheduler.join

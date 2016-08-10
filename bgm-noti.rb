@@ -20,7 +20,11 @@ class GetBangumis
   TITLE_WITH_TAG = %q{<td class="title">\s+(?:<span class="tag">\s+<a  href=[^_]+_id/(\d+).+\s+(\S+?)</a></span>)?\s+<a[^>]+>\s+(.+)</a>\s+.*?</td>\s+}
   MAGNET_LINK_AND_SIZE = %q{<td nowrap="nowrap" align="center"><a class="download-arrow arrow-magnet" [^h]+href="(.*)">&nbsp;</a></td>\s+<td nowrap="nowrap" align="center">(\S+)<\/td>}
 
-  def self.start
+  def initialize
+    @last_access = Time.now
+  end
+
+  def call
     puts "---------------> Start getting bangumis updates."
     begin
       body = open(DMHY_URL).read
@@ -29,6 +33,7 @@ class GetBangumis
       return
     end
 
+    # parsing html body for bangumis data
     bangumi_list = body.scan(Regexp.new(TIME + CLASSFICATION + TITLE_WITH_TAG + MAGNET_LINK_AND_SIZE))
 
     new_bangumis = []
@@ -41,10 +46,13 @@ class GetBangumis
                                 magnet_link: bangumi[5],
                                 size: bangumi[6])
 
+      break if Time.parse(new_bangumi.upload_at) < @last_access
       new_bangumis << new_bangumi
     end
     puts "---------------> Success fetching #{new_bangumis.count} bangumis."
+    @last_access = Time.now
 
+    # filtering by subscriptions
     @bangumis = []
     subscriptions = JSON.parse(File.read("subscriptions.json"))
     subscriptions.each do |subscription|
@@ -55,33 +63,37 @@ class GetBangumis
     end
     puts "---------------> Complete filtering. #{@bangumis.count} updates."
 
-    mail_config = YAML.load_file("mail_config.yml")
-    Mail.defaults do
-      delivery_method :smtp, mail_config["delivery_method"].map{|k, v| {k.to_sym => v}}.reduce(:merge)
-    end
-
-    context = binding
-    mail = Mail.new do
-      text_part do
-        body 'This is plain text'
+    # sending email if bangumi updates
+    if @bangumis.count == 0
+      puts "---------------> Abort."
+    else
+      mail_config = YAML.load_file("mail_config.yml")
+      Mail.defaults do
+        delivery_method :smtp, mail_config["delivery_method"].map{|k, v| {k.to_sym => v}}.reduce(:merge)
       end
 
-      html_part do
-        content_type 'text/html; charset=UTF-8'
-        body ERB.new(File.read('mail.html.erb')).result(context)
+      context = binding
+      mail = Mail.new do
+        text_part do
+          body 'This is plain text'
+        end
+
+        html_part do
+          content_type 'text/html; charset=UTF-8'
+          body ERB.new(File.read('mail.html.erb')).result(context)
+        end
       end
+
+      mail.from     = mail_config["mail"]["from"]
+      mail.to       = mail_config["mail"]["to"]
+      mail.subject  = eval(mail_config["mail"]["subject"])
+
+      mail.deliver!
+      puts "---------------> Succeed sending email."
     end
-
-    mail.from     = mail_config["mail"]["from"]
-    mail.to       = mail_config["mail"]["to"]
-    mail.subject  = eval(mail_config["mail"]["subject"])
-
-    mail.deliver!
-    puts "---------------> Succeed sending email."
-
   end
 end
 
 if __FILE__ == $0
-  GetBangumis.start
+  GetBangumis.new.call
 end
