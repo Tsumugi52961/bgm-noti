@@ -20,8 +20,8 @@ class GetBangumis
   TITLE_WITH_TAG = %q{<td class="title">\s+(?:<span class="tag">\s+<a  href=[^_]+_id/(\d+).+\s+(\S+?)</a></span>)?\s+<a[^>]+>\s+(.+)</a>\s+.*?</td>\s+}
   MAGNET_LINK_AND_SIZE = %q{<td nowrap="nowrap" align="center"><a class="download-arrow arrow-magnet" [^h]+href="(.*)">&nbsp;</a></td>\s+<td nowrap="nowrap" align="center">(\S+)<\/td>}
 
-  def initialize
-    @last_access = Time.now
+  def initialize()
+    @last_access = Time.at(Time.now.to_i - 86400)
   end
 
   def call
@@ -75,7 +75,8 @@ class GetBangumis
       context = binding
       mail = Mail.new do
         text_part do
-          body 'This is plain text'
+          content_type 'text/html; charset=UTF-8'
+          body ERB.new(File.read('mail.text.erb')).result(context)
         end
 
         html_part do

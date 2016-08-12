@@ -1,0 +1,7 @@
+您订阅的新番有 <%= @bangumis.count %> 条更新！
+
+<% @bangumis.each do |bangumi| %>
+	<%= bangumi.title.size > 70 ? bangumi.title[0...70] + "..." : bangumi.title %>
+	<%= bangumi.fansub %>, <%= bangumi.size %>,	<%= Time.parse(bangumi.upload_at).strftime("%F %T") %>
+	<%= bangumi.magnet_link[0..51]%>
+<% end %>
