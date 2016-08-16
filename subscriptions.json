@@ -1,29 +1,37 @@
 [
 	{
 		"name":"魔法少女伊莉雅",
-		"rule":"Fate/kaleid liner",
+		"rule":"Liner|莉雅",
 		"fansub_id":58
 	},
 	{
-		"name":"超时空要塞 delta",
-		"rule":"Macross Delta",
-		"fansub_id":null
-	},
-	{
-		"name":"亚尔斯兰战记",
-		"rule":"Arslan"
-	},
-	{
 		"name":"Re：从零开始的异世界生活",
-		"rule":"Zero Kara"
+		"rule":"從零",
+		"fansub_id":407
+	},
+	{
+		"name":"超时空要塞 delta",
+		"rule":"超时空要塞Δ",
+		"fansub_id":430
+	},
+	{
+		"name":"亚尔斯兰战记 风尘乱舞",
+		"rule":"风尘.+[GB]",
+		"fansub_id":228
 	},
 	{
 		"name":"弹丸论破3",
-		"rule":"Danganronpa",
-		"fansub_id":241
+		"rule":"论破.*简体",
+		"fansub_id":58
 	},
 	{
-		"name":"Rewrite",
-		"rule":"Rewrite"
+		"name":"食戟之灵 二之皿",
+		"rule":"食戟",
+		"fansub_id":49
+	},
+	{
+		"name":"NEW GAME",
+		"rule":"NEW GAME.+[简体]",
+		"fansub_id":283
 	}
 ]
