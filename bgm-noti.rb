@@ -58,7 +58,7 @@ class GetBangumis
     subscriptions.each do |subscription|
       cur_exp = Regexp.new(subscription["rule"])
       new_bangumis.each do |bangumi|
-        @bangumis << bangumi if cur_exp.match(bangumi.title)
+        @bangumis << bangumi if bangumi.fansub_id.to_i == subscription["fansub_id"] && cur_exp.match(bangumi.title)
       end
     end
     puts "---------------> Complete filtering. #{@bangumis.count} updates."
