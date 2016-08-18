@@ -54,7 +54,7 @@ class GetBangumis
 
     # filtering by subscriptions
     @bangumis = []
-    subscriptions = JSON.parse(File.read("subscriptions.json"))
+    subscriptions = JSON.parse(File.read(load_file("subscriptions.json")))
     subscriptions.each do |subscription|
       cur_exp = Regexp.new(subscription["rule"])
       new_bangumis.each do |bangumi|
@@ -67,7 +67,7 @@ class GetBangumis
     if @bangumis.count == 0
       puts "---------------> Abort."
     else
-      mail_config = YAML.load_file("mail_config.yml")
+      mail_config = YAML.load_file(load_file "mail_config.yml")
       Mail.defaults do
         delivery_method :smtp, mail_config["delivery_method"].map{|k, v| {k.to_sym => v}}.reduce(:merge)
       end
@@ -76,12 +76,12 @@ class GetBangumis
       mail = Mail.new do
         text_part do
           content_type 'text/html; charset=UTF-8'
-          body ERB.new(File.read('mail.text.erb')).result(context)
+          body ERB.new(File.read(File.expand_path('../mail.text.erb', __FILE__))).result(context)
         end
 
         html_part do
           content_type 'text/html; charset=UTF-8'
-          body ERB.new(File.read('mail.html.erb')).result(context)
+          body ERB.new(File.read(File.expand_path('../mail.html.erb', __FILE__))).result(context)
         end
       end
 
@@ -92,6 +92,11 @@ class GetBangumis
       mail.deliver!
       puts "---------------> Succeed sending email."
     end
+  end
+  
+  private
+  def load_file filename
+    File.expand_path('../' + filename, __FILE__)
   end
 end
 

@@ -1,5 +1,5 @@
 require 'rufus-scheduler'
-require './bgm-noti.rb'
+require File.expand_path('../bgm-noti.rb', __FILE__)
 
 scheduler = Rufus::Scheduler.singleton
 
