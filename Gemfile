@@ -4,3 +4,7 @@ source 'https://gems.ruby-china.org/'
 gem 'rufus-scheduler'
 
 gem 'daemons'
+
+gem 'json'
+
+gem 'mail'

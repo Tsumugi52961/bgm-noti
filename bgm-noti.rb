@@ -1,8 +1,8 @@
 # encoding: utf-8
 require 'open-uri'
-require 'JSON'
-require 'Mail'
-require 'Erb'
+require 'json'
+require 'mail'
+require 'erb'
 
 class Bangumi
   attr_accessor :title, :upload_at, :classfication, :fansub_id, :fansub, :title, :magnet_link, :size
