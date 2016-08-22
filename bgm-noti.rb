@@ -46,7 +46,7 @@ class GetBangumis
                                 magnet_link: bangumi[5],
                                 size: bangumi[6])
 
-      break if Time.parse(new_bangumi.upload_at) < @last_access
+      break if Time.parse(new_bangumi.upload_at + " UTC") - Time.zone_offset("+08:00") < @last_access
       new_bangumis << new_bangumi
     end
     puts "---------------> Success fetching #{new_bangumis.count} bangumis."
