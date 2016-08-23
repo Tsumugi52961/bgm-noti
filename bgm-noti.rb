@@ -3,6 +3,7 @@ require 'open-uri'
 require 'json'
 require 'mail'
 require 'erb'
+require 'logger'
 
 class Bangumi
   attr_accessor :title, :upload_at, :classfication, :fansub_id, :fansub, :title, :magnet_link, :size
@@ -22,6 +23,19 @@ class GetBangumis
 
   def initialize()
     @last_access = Time.at(Time.now.to_i - 86400)
+    unless File.exist?(File.expand_path('../' + "bgm-noti.log", __FILE__))
+      system "touch #{(File.expand_path('../' + 'bgm-noti.log', __FILE__))}"
+    end
+    @logger = Logger.new File.expand_path('../' + "bgm-noti.log", __FILE__)
+    @logger.level = Logger::INFO
+    @logger.formatter = proc do |severity, datetime, progname, msg|
+        date_format = datetime.strftime("%Y-%m-%d %H:%M:%S")
+        if severity == "INFO" or severity == "WARN"
+            "[#{date_format}] #{severity}  : #{msg}\n"
+        else        
+            "[#{date_format}] #{severity} : #{msg}\n"
+        end
+    end
   end
 
   def call
@@ -30,6 +44,7 @@ class GetBangumis
       body = open(DMHY_URL).read
     rescue
       puts "---------------> Bad Network."
+      @logger.warn("Bad Network")
       return
     end
 
@@ -50,6 +65,8 @@ class GetBangumis
       new_bangumis << new_bangumi
     end
     puts "---------------> Success fetching #{new_bangumis.count} bangumis."
+    @logger.info("Fetching #{new_bangumis.count} bangumis.")
+    @logger.info("@last_access updates: #{@last_access} => #{Time.now}")
     @last_access = Time.now
 
     # filtering by subscriptions
@@ -66,6 +83,7 @@ class GetBangumis
     # sending email if bangumi updates
     if @bangumis.count == 0
       puts "---------------> Abort."
+      @logger.info("No updates.")
     else
       mail_config = YAML.load_file(load_file "mail_config.yml")
       Mail.defaults do
@@ -91,6 +109,7 @@ class GetBangumis
 
       mail.deliver!
       puts "---------------> Succeed sending email."
+      @logger.info("Sending #{@bangumis.count} bangumi(s).")
     end
   end
   
