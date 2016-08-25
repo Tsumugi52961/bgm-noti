@@ -10,7 +10,7 @@
         <tr style="padding-top: 20px;"> 您订阅的新番有 <%= @bangumis.count %> 条更新！<br> </tr>
         <tr><td style="font-size: 0; line-height: 0;" height="10">&nbsp;</td></tr>
 
-        <% @bangumis.each do |bangumi| %>
+        <% @bangumis.map{|b| b[1]}.uniq.each do |bangumi| %>
         <tr style="padding-top: 20px;">
           <td><%= bangumi.title.size > 70 ? bangumi.title[0...70] + "..." : bangumi.title %></td>
           <td><%= bangumi.fansub %></td>
