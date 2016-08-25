@@ -106,8 +106,8 @@ class GetBangumis
       @subject = @bangumis.map{|b| b[0]}.uniq[0..1].join('、') + (@bangumis.map{|b| b[0]}.uniq.count > 2 ? "等 #{@bangumis.map{|b| b[0]}.uniq.count} 部新番" : '') + '更新啦！'
 
       mail.from     = mail_config["mail"]["from"]
-      mail.to       = mail_config["mail"]["to"]
-      mail.subject  = "[#{Time.now.strftime('%Y%m%d')}] " + (mail_config["mail"]["subject"].blank? ? @subject : eval(mail_config["mail"]["subject"]))
+      mail.to       = mail_config["mail"]["to"] 
+      mail.subject  = "[#{Time.now.strftime('%Y%m%d')}] " + ((mail_config["mail"]["subject"].nil? || mail_config["mail"]["subject"].blank?) ? @subject : eval(mail_config["mail"]["subject"]))
 
       mail.deliver!
       puts "---------------> Succeed sending email."
