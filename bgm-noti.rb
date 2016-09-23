@@ -107,14 +107,14 @@ class GetBangumis
 
       mail.from     = mail_config["mail"]["from"]
       mail.to       = mail_config["mail"]["to"] 
-      mail.subject  = "[#{Time.now.strftime('%Y%m%d')}] " + ((mail_config["mail"]["subject"].nil? || mail_config["mail"]["subject"].blank?) ? @subject : eval(mail_config["mail"]["subject"]))
+      mail.subject  = (mail_config["mail"]["subject"].nil? || mail_config["mail"]["subject"].blank?) ? @subject : eval(mail_config["mail"]["subject"])
 
       mail.deliver!
       puts "---------------> Succeed sending email."
       @logger.info("Sending #{@bangumis.count} bangumi(s).")
     end
   end
-  
+
   private
   def load_file filename
     File.expand_path('../' + filename, __FILE__)
