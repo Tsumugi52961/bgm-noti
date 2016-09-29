@@ -4,9 +4,10 @@ require 'json'
 require 'mail'
 require 'erb'
 require 'logger'
+require 'nokogiri'
 
 class Bangumi
-  attr_accessor :title, :upload_at, :classfication, :fansub_id, :fansub, :title, :magnet_link, :size
+  attr_accessor :title, :link, :upload_at, :classfication, :fansub_id, :fansub, :title, :magnet_link, :size
   def initialize(options = {})
     options.each do |key, value|
       self.instance_variable_set("@#{key}", value)
@@ -16,32 +17,28 @@ end
 
 class GetBangumis
   DMHY_URL = 'https://share.dmhy.org/'
-  TIME = %q{<td.*>\s*.+<span.*>(.*)</span></td>\s+}
-  CLASSFICATION = %q{<td.*>\s+<a[^>]+>\s+(?:<b>)?<font.+>(\S+)</font>(?:</b>)?</a>\s+</td>\s+}
-  TITLE_WITH_TAG = %q{<td class="title">\s+(?:<span class="tag">\s+<a  href=[^_]+_id/(\d+).+\s+(\S+?)</a></span>)?\s+<a[^>]+>\s+(.+)</a>\s+.*?</td>\s+}
-  MAGNET_LINK_AND_SIZE = %q{<td nowrap="nowrap" align="center"><a class="download-arrow arrow-magnet" [^h]+href="(.*)">&nbsp;</a></td>\s+<td nowrap="nowrap" align="center">(\S+)<\/td>}
 
   def initialize()
-    @last_access = Time.at(Time.now.to_i - 86400)
+    @last_access = Time.at(Time.now.to_i - 864000)
     unless File.exist?(File.expand_path('../' + "bgm-noti.log", __FILE__))
       system "touch #{(File.expand_path('../' + 'bgm-noti.log', __FILE__))}"
     end
     @logger = Logger.new File.expand_path('../' + "bgm-noti.log", __FILE__)
     @logger.level = Logger::INFO
     @logger.formatter = proc do |severity, datetime, progname, msg|
-        date_format = datetime.strftime("%Y-%m-%d %H:%M:%S")
-        if severity == "INFO" or severity == "WARN"
-            "[#{date_format}] #{severity}  : #{msg}\n"
-        else        
-            "[#{date_format}] #{severity} : #{msg}\n"
-        end
+      date_format = datetime.strftime("%Y-%m-%d %H:%M:%S")
+      if severity == "INFO" or severity == "WARN"
+          "[#{date_format}] #{severity}  : #{msg}\n"
+      else
+          "[#{date_format}] #{severity} : #{msg}\n"
+      end
     end
   end
 
   def call
     puts "---------------> Start getting bangumis updates."
     begin
-      body = open(DMHY_URL).read
+      body = Nokogiri::HTML(open(DMHY_URL))
     rescue
       puts "---------------> Bad Network."
       @logger.warn("Bad Network")
@@ -49,17 +46,20 @@ class GetBangumis
     end
 
     # parsing html body for bangumis data
-    bangumi_list = body.scan(Regexp.new(TIME + CLASSFICATION + TITLE_WITH_TAG + MAGNET_LINK_AND_SIZE))
-
     new_bangumis = []
-    bangumi_list.each do |bangumi|
-      new_bangumi = Bangumi.new(upload_at: bangumi[0],
-                                classfication: bangumi[1],
-                                fansub_id: bangumi[2],
-                                fansub: bangumi[3],
-                                title: bangumi[4],
-                                magnet_link: bangumi[5],
-                                size: bangumi[6])
+    body.css("tbody > *").each do |item|
+      new_bangumi = Bangumi.new()
+      new_bangumi.upload_at     = item.at_xpath("./td[@width]/span").text
+      new_bangumi.classfication = item.at_xpath("./td/a[@href]//font").text
+
+      fansub = item.at_xpath("./td[@class='title']/span[@class='tag']/a[@href]")
+      new_bangumi.fansub_id     = fansub.at_xpath("./@href").text.split('/')[-1] if !fansub.nil?
+      new_bangumi.fansub        = fansub.text.gsub(/[\n\t]/, '') if !fansub.nil?
+
+      new_bangumi.link          = "https://share.dmhy.org" + item.at_xpath("./td[@class='title']/a[@href]/@href").text
+      new_bangumi.title         = item.at_xpath("./td[@class='title']/a[@href]").text.gsub(/[\n\t]/, '')
+      new_bangumi.magnet_link   = item.at_xpath("./td[@nowrap]/a[@class][@title]/@href").text
+      new_bangumi.size          = item.at_xpath("./td[@nowrap]/a[@class][@title]/../following-sibling::td").text
 
       break if Time.parse(new_bangumi.upload_at + " UTC") - Time.zone_offset("+08:00") < @last_access
       new_bangumis << new_bangumi
@@ -106,7 +106,7 @@ class GetBangumis
       @subject = @bangumis.map{|b| b[0]}.uniq[0..1].join('、') + (@bangumis.map{|b| b[0]}.uniq.count > 2 ? "等 #{@bangumis.map{|b| b[0]}.uniq.count} 部新番" : '') + '更新啦！'
 
       mail.from     = mail_config["mail"]["from"]
-      mail.to       = mail_config["mail"]["to"] 
+      mail.to       = mail_config["mail"]["to"]
       mail.subject  = (mail_config["mail"]["subject"].nil? || mail_config["mail"]["subject"].blank?) ? @subject : eval(mail_config["mail"]["subject"])
 
       mail.deliver!
