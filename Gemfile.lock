@@ -6,6 +6,9 @@ GEM
     mail (2.6.3)
       mime-types (>= 1.16, < 3)
     mime-types (2.99)
+    mini_portile2 (2.1.0)
+    nokogiri (1.7.1)
+      mini_portile2 (~> 2.1.0)
     rufus-scheduler (3.2.1)
 
 PLATFORMS
@@ -15,7 +18,8 @@ DEPENDENCIES
   daemons
   json
   mail
+  nokogiri
   rufus-scheduler
 
 BUNDLED WITH
-   1.12.5
+   1.14.6

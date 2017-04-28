@@ -11,20 +11,19 @@
         <tr><td style="font-size: 0; line-height: 0;" height="10">&nbsp;</td></tr>
 
         <% @bangumis.map{|b| b[1]}.uniq.each do |bangumi| %>
-        <tr style="padding-top: 20px;">
-          <td><%= bangumi.title.size > 70 ? bangumi.title[0...70] + "..." : bangumi.title %></td>
-          <td><%= bangumi.fansub %></td>
-          <td width="50" align="right"><%= bangumi.size %></td>
-        </tr>
+          <tr style="padding-top: 20px;">
+            <td><%= bangumi.title.size > 70 ? bangumi.title[0...70] + "..." : bangumi.title %></td>
+            <td align="right"><%= bangumi.classfication %></td>
+          </tr>
 
-        <tr style="padding-top: 20px;">
-          <td>
-            <a href="<%= bangumi.magnet_link%>"> <%=bangumi.magnet_link[0..51] %> </a>
-          </td>
-          <td width="140" align="right" colspan="2"><%= Time.parse(bangumi.upload_at).strftime("%F %T") %></td>
-        </tr>
+          <tr style="padding-top: 20px;">
+            <td>
+              <a href="<%= bangumi.magnet_link%>"> <%=bangumi.magnet_link[0..51] %> </a>
+            </td>
+            <td width="140" align="right" colspan="2"><%= Time.parse(bangumi.upload_at).strftime("%F %T") %></td>
+          </tr>
 
-        <tr height="20"></tr>
+          <tr height="20"></tr>
         <% end %>
       </table>
     </table>

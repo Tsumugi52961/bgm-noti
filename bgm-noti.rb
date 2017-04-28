@@ -4,7 +4,7 @@ require 'json'
 require 'mail'
 require 'erb'
 require 'logger'
-require 'nokogiri'
+require 'rss'
 
 class Bangumi
   attr_accessor :title, :link, :upload_at, :classfication, :fansub_id, :fansub, :title, :magnet_link, :size
@@ -17,6 +17,7 @@ end
 
 class GetBangumis
   DMHY_URL = 'https://share.dmhy.org/'
+  DMHY_RSS = 'https://share.dmhy.org/topics/rss/rss.xml'
 
   def initialize()
     @last_access = Time.at(Time.now.to_i - 864000)
@@ -38,28 +39,21 @@ class GetBangumis
   def call
     puts "---------------> Start getting bangumis updates."
     begin
-      body = Nokogiri::HTML(open(DMHY_URL))
+      rss = RSS::Parser.parse('https://share.dmhy.org/topics/rss/rss.xml', false)
     rescue
       puts "---------------> Bad Network."
       @logger.warn("Bad Network")
       return
     end
 
-    # parsing html body for bangumis data
     new_bangumis = []
-    body.css("tbody > *").each do |item|
+    rss.items.each do |item|
       new_bangumi = Bangumi.new()
-      new_bangumi.upload_at     = item.at_xpath("./td[@width]/span").text
-      new_bangumi.classfication = item.at_xpath("./td/a[@href]//font").text
-
-      fansub = item.at_xpath("./td[@class='title']/span[@class='tag']/a[@href]")
-      new_bangumi.fansub_id     = fansub.at_xpath("./@href").text.split('/')[-1] if !fansub.nil?
-      new_bangumi.fansub        = fansub.text.gsub(/[\n\t]/, '') if !fansub.nil?
-
-      new_bangumi.link          = "https://share.dmhy.org" + item.at_xpath("./td[@class='title']/a[@href]/@href").text
-      new_bangumi.title         = item.at_xpath("./td[@class='title']/a[@href]").text.gsub(/[\n\t]/, '')
-      new_bangumi.magnet_link   = item.at_xpath("./td[@nowrap]/a[@class][@title]/@href").text
-      new_bangumi.size          = item.at_xpath("./td[@nowrap]/a[@class][@title]/../following-sibling::td").text
+      new_bangumi.upload_at = item.pubDate.strftime("%F %T")
+      new_bangumi.classfication = item.category.content
+      new_bangumi.link = item.link
+      new_bangumi.title = item.title
+      new_bangumi.magnet_link = item.enclosure.url
 
       break if Time.parse(new_bangumi.upload_at + " UTC") - Time.zone_offset("+08:00") < @last_access
       new_bangumis << new_bangumi
@@ -69,13 +63,12 @@ class GetBangumis
     @logger.info("@last_access updates: #{@last_access} => #{Time.now}")
     @last_access = Time.now
 
-    # filtering by subscriptions
     @bangumis = []
     subscriptions = JSON.parse(File.read(load_file("subscriptions.json")))
     subscriptions.each do |subscription|
       cur_exp = Regexp.new(subscription["rule"])
       new_bangumis.each do |bangumi|
-        @bangumis << [subscription["name"], bangumi] if (bangumi.fansub_id.to_i == subscription["fansub_id"] || subscription["fansub_id"].nil?) && cur_exp.match(bangumi.title)
+        @bangumis << [subscription["name"], bangumi] if cur_exp.match(bangumi.title)
       end
     end
     puts "---------------> Complete filtering. #{@bangumis.count} updates."
@@ -90,6 +83,7 @@ class GetBangumis
         delivery_method :smtp, mail_config["delivery_method"].map{|k, v| {k.to_sym => v}}.reduce(:merge)
       end
 
+      puts "---------------> Sending email ..."
       context = binding
       mail = Mail.new do
         text_part do
