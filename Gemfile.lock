@@ -1,24 +1,22 @@
 GEM
   remote: https://gems.ruby-china.org/
   specs:
-    daemons (1.2.3)
-    json (1.8.3)
-    mail (2.6.3)
-      mime-types (>= 1.16, < 3)
-    mime-types (2.99)
-    mini_portile2 (2.1.0)
-    nokogiri (1.7.1)
-      mini_portile2 (~> 2.1.0)
-    rufus-scheduler (3.2.1)
+    json (2.1.0)
+    mail (2.7.0)
+      mini_mime (>= 0.1.1)
+    mini_mime (1.0.0)
+    rufus-scheduler (3.3.4)
+      tzinfo
+    thread_safe (0.3.6)
+    tzinfo (1.2.2)
+      thread_safe (~> 0.1)
 
 PLATFORMS
   ruby
 
 DEPENDENCIES
-  daemons
   json
   mail
-  nokogiri
   rufus-scheduler
 
 BUNDLED WITH

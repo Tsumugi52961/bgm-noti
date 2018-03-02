@@ -1,37 +1,39 @@
 [
-	{
-		"name":"魔法少女伊莉雅",
-		"rule":"Liner|莉雅",
-		"fansub_id":58
-	},
-	{
-		"name":"Re：从零开始的异世界生活",
-		"rule":"從零",
-		"fansub_id":407
-	},
-	{
-		"name":"超时空要塞 delta",
-		"rule":"超时空要塞Δ",
-		"fansub_id":430
-	},
-	{
-		"name":"亚尔斯兰战记 风尘乱舞",
-		"rule":"风尘.+[GB]",
-		"fansub_id":228
-	},
-	{
-		"name":"弹丸论破3",
-		"rule":"论破.*简体",
-		"fansub_id":58
-	},
-	{
-		"name":"食戟之灵 二之皿",
-		"rule":"食戟",
-		"fansub_id":49
-	},
-	{
-		"name":"NEW GAME",
-		"rule":"NEW GAME.+[简体]",
-		"fansub_id":283
-	}
+    // {
+    //     "name":"",
+    //     "rule":""
+    // },
+    {
+        "name":"泥鲸之子在沙地上歌唱",
+        "rule":"雪飘.+上歌.+720p.+简体"
+    },
+    {
+        "name":"食戟之灵 餐之皿",
+        "rule":"澄空学园.+华盟字幕社.+食戟之灵.+餐之皿.+720p"
+    },
+    {
+        "name":"URAHARA",
+        "rule":"^【喵萌奶茶屋】★10月新番★\\[URAHARA\\].+720P"
+    },
+    {
+        "name":"少女终末旅行",
+        "rule":"^【千夏字幕组&喵萌奶茶屋】【少女终末旅行_Shoujo Shuumatsu Ryokou】.+简体"
+    },
+    {
+        "name":"奇诺之旅",
+        "rule":"^【喵萌茶会字幕組】★10月新番【奇诺之旅】.+720P.+简体"
+    },
+    {
+        "name":"紫罗兰永恒花园",
+        "rule":"^.雪飘工作室..紫罗兰永恒花园.*Evergarden.*1080p.*简体中文字幕内嵌"
+    },
+    {
+        "name":"DARLING in the FRANXX",
+        "rule":"^【千夏UMA小隊】【DARLING in the FRANXX】.*简体"
+    },
+    {
+        "name":"爆肝工程师的异世界狂想曲",
+        "rule":"^【喵萌奶茶屋】.*爆肝工程师的异世界狂想曲"
+    }
+
 ]

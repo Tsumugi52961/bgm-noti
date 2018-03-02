@@ -1,13 +1,13 @@
 # encoding: utf-8
-require 'open-uri'
 require 'json'
 require 'mail'
 require 'erb'
 require 'logger'
 require 'rss'
+require 'rest-client'
 
 class Bangumi
-  attr_accessor :title, :link, :upload_at, :classfication, :fansub_id, :fansub, :title, :magnet_link, :size
+  attr_accessor :name, :title, :link, :uploaded_at, :classfication, :fansub_id, :fansub, :title, :magnet_link, :size
   def initialize(options = {})
     options.each do |key, value|
       self.instance_variable_set("@#{key}", value)
@@ -18,13 +18,15 @@ end
 class GetBangumis
   DMHY_URL = 'https://share.dmhy.org/'
   DMHY_RSS = 'https://share.dmhy.org/topics/rss/rss.xml'
+  REMOTE_PATH = ENV["REMOTE_PATH"]
+  LOG_PATH = File.expand_path("../log/bgm-noti.log", __FILE__)
 
   def initialize()
     @last_access = Time.at(Time.now.to_i - 864000)
-    unless File.exist?(File.expand_path('../' + "bgm-noti.log", __FILE__))
-      system "touch #{(File.expand_path('../' + 'bgm-noti.log', __FILE__))}"
+    unless File.exist?(LOG_PATH)
+      system "touch #{LOG_PATH}"
     end
-    @logger = Logger.new File.expand_path('../' + "bgm-noti.log", __FILE__)
+    @logger = Logger.new LOG_PATH
     @logger.level = Logger::INFO
     @logger.formatter = proc do |severity, datetime, progname, msg|
       date_format = datetime.strftime("%Y-%m-%d %H:%M:%S")
@@ -39,7 +41,7 @@ class GetBangumis
   def call
     puts "---------------> Start getting bangumis updates."
     begin
-      rss = RSS::Parser.parse('https://share.dmhy.org/topics/rss/rss.xml', false)
+      rss = RSS::Parser.parse(DMHY_RSS, false)
     rescue
       puts "---------------> Bad Network."
       @logger.warn("Bad Network")
@@ -49,13 +51,13 @@ class GetBangumis
     new_bangumis = []
     rss.items.each do |item|
       new_bangumi = Bangumi.new()
-      new_bangumi.upload_at = item.pubDate.strftime("%F %T")
+      new_bangumi.uploaded_at = item.pubDate.strftime("%F %T")
       new_bangumi.classfication = item.category.content
       new_bangumi.link = item.link
       new_bangumi.title = item.title
       new_bangumi.magnet_link = item.enclosure.url
 
-      break if Time.parse(new_bangumi.upload_at + " UTC") - Time.zone_offset("+08:00") < @last_access
+      break if Time.parse(new_bangumi.uploaded_at + " UTC") - Time.zone_offset("+08:00") < @last_access
       new_bangumis << new_bangumi
     end
     puts "---------------> Success fetching #{new_bangumis.count} bangumis."
@@ -68,7 +70,8 @@ class GetBangumis
     subscriptions.each do |subscription|
       cur_exp = Regexp.new(subscription["rule"])
       new_bangumis.each do |bangumi|
-        @bangumis << [subscription["name"], bangumi] if cur_exp.match(bangumi.title)
+        bangumi.name = subscription["name"]
+        @bangumis << bangumi.tap{|b| b.name = subscription["name"]} if cur_exp.match(bangumi.title)
       end
     end
     puts "---------------> Complete filtering. #{@bangumis.count} updates."
@@ -97,7 +100,7 @@ class GetBangumis
         end
       end
 
-      @subject = @bangumis.map{|b| b[0]}.uniq[0..1].join('、') + (@bangumis.map{|b| b[0]}.uniq.count > 2 ? "等 #{@bangumis.map{|b| b[0]}.uniq.count} 部新番" : '') + '更新啦！'
+      @subject = @bangumis.map(&:name).uniq[0..1].join('、') + (@bangumis.map(&:name).uniq.count > 2 ? "等 #{@bangumis.count} 部新番" : '') + '更新啦！'
 
       mail.from     = mail_config["mail"]["from"]
       mail.to       = mail_config["mail"]["to"]
@@ -106,10 +109,31 @@ class GetBangumis
       mail.deliver!
       puts "---------------> Succeed sending email."
       @logger.info("Sending #{@bangumis.count} bangumi(s).")
+
+      # request remote
+      @bangumis.each do |bangumi|
+        response = request_remote(bangumi)
+        if response&.code == 200 || response&.code == 201
+          @logger.info("Request succeed.")
+        else
+          @logger.error("Request failed! #{response.body}")
+        end
+      end
     end
   end
 
   private
+  def request_remote(bangumi)
+    body = {
+      title: bangumi.title,
+      classfication: bangumi.classfication,
+      link: bangumi.link,
+      uploaded_at: bangumi.uploaded_at,
+      magnet_link: bangumi.magnet_link
+    }
+    RestClient.post "#{REMOTE_PATH}/bangumis", body
+  end
+
   def load_file filename
     File.expand_path('../' + filename, __FILE__)
   end
@@ -118,3 +142,4 @@ end
 if __FILE__ == $0
   GetBangumis.new.call
 end
+
