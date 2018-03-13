@@ -9,3 +9,6 @@ gem 'json'
 # sending mail
 gem 'mail'
 
+# requests
+gem 'rest-client'
+
