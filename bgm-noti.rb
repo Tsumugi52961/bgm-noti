@@ -116,7 +116,7 @@ class GetBangumis
         if response&.code == 200 || response&.code == 201
           @logger.info("Request succeed.")
         else
-          @logger.error("Request failed! #{response.body}")
+          @logger.error("Request failed! #{response&.body}")
         end
       end
     end
@@ -132,6 +132,9 @@ class GetBangumis
       magnet_link: bangumi.magnet_link
     }
     RestClient.post "#{REMOTE_PATH}/bangumis", body
+  rescue
+    @logger.error("Cannot connect remote server!")
+    nil
   end
 
   def load_file filename
